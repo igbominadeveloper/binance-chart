@@ -1,4 +1,5 @@
 import historyProvider from './historyProvider';
+import { getBinanceSymbols } from './requests';
 import stream from './stream';
 
 const supportedResolutions = [
@@ -10,21 +11,39 @@ const supportedResolutions = [
   '60',
   '120',
   '240',
-  'D',
+  '360',
+  '480',
+  '720',
+  '1D',
+  '3D',
+  '1W',
+  '1M',
 ];
 
 const config = {
   supported_resolutions: supportedResolutions,
+  supports_marks: false,
+  supports_timescale_marks: false,
+  supports_time: true,
 };
 
-export default {
-  onReady: (cb) => {
-    console.log('=====onReady running');
+let allSymbols = [];
+
+const Api = {
+  onReady: async function (cb) {
+    allSymbols = await getBinanceSymbols();
+
     setTimeout(() => cb(config), 0);
   },
+
   searchSymbols: (userInput, exchange, symbolType, onResultReadyCallback) => {
-    console.log('====Search Symbols running');
+    const matches = allSymbols.filter((symbol) =>
+      symbol.full_name.toLowerCase().includes(userInput.toLowerCase())
+    );
+
+    onResultReadyCallback(matches);
   },
+
   resolveSymbol: (
     symbolName,
     onSymbolResolvedCallback,
@@ -32,10 +51,8 @@ export default {
   ) => {
     // expects a symbolInfo object in response
     console.log('======resolveSymbol running');
-    // console.log('resolveSymbol:',{symbolName})
-    var split_data = symbolName.split(/[:/]/);
-    // console.log({split_data})
-    var symbol_stub = {
+    const split_data = symbolName.split(/[:/]/);
+    const symbol_stub = {
       name: symbolName,
       description: '',
       type: 'crypto',
@@ -47,7 +64,7 @@ export default {
       pricescale: 100000000,
       has_intraday: true,
       intraday_multipliers: ['1', '60'],
-      supported_resolution: supportedResolutions,
+      supported_resolution: config.supportedResolutions,
       volume_precision: 8,
       data_status: 'streaming',
     };
@@ -57,11 +74,9 @@ export default {
     }
     setTimeout(function () {
       onSymbolResolvedCallback(symbol_stub);
-      console.log('Resolving that symbol....', symbol_stub);
     }, 0);
-
-    // onResolveErrorCallback('Not feeling it today')
   },
+
   getBars: function (
     symbolInfo,
     resolution,
@@ -71,9 +86,6 @@ export default {
     onErrorCallback,
     firstDataRequest
   ) {
-    console.log('=====getBars running');
-    // console.log('function args',arguments)
-    // console.log(`Requesting bars between ${new Date(from * 1000).toISOString()} and ${new Date(to * 1000).toISOString()}`)
     historyProvider
       .getBars(symbolInfo, resolution, from, to, firstDataRequest)
       .then((bars) => {
@@ -95,7 +107,6 @@ export default {
     subscribeUID,
     onResetCacheNeededCallback
   ) => {
-    console.log('=====subscribeBars runnning');
     stream.subscribeBars(
       symbolInfo,
       resolution,
@@ -105,13 +116,11 @@ export default {
     );
   },
   unsubscribeBars: (subscriberUID) => {
-    console.log('=====unsubscribeBars running');
-
     stream.unsubscribeBars(subscriberUID);
   },
   calculateHistoryDepth: (resolution, resolutionBack, intervalBack) => {
     //optional
-    console.log('=====calculateHistoryDepth running');
+    // console.log('=====calculateHistoryDepth running');
     // while optional, this makes sure we request 24 hours of minute data at a time
     // CryptoCompare's minute data endpoint will throw an error if we request data beyond 7 days in the past, and return no data
     return resolution < 60
@@ -120,7 +129,7 @@ export default {
   },
   getMarks: (symbolInfo, startDate, endDate, onDataCallback, resolution) => {
     //optional
-    console.log('=====getMarks running');
+    // console.log('=====getMarks running');
   },
   getTimeScaleMarks: (
     symbolInfo,
@@ -130,9 +139,11 @@ export default {
     resolution
   ) => {
     //optional
-    console.log('=====getTimeScaleMarks running');
+    // console.log('=====getTimeScaleMarks running');
   },
   getServerTime: (cb) => {
     console.log('=====getServerTime running');
   },
 };
+
+export default Api;
