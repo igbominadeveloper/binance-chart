@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 
-import './index.css';
-
 import Datafeed from './api/';
+
+import './index.css';
 
 function getLanguageFromURL() {
   const regex = new RegExp('[\\?&]lang=([^&#]*)');
