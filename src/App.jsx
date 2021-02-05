@@ -1,20 +1,11 @@
-import * as React from 'react';
-import './App.css';
-import { TVChartContainer } from './components/TVChartContainer';
+import React from 'react';
 
-class App extends React.Component {
-  render() {
-    return (
-      <div className={'App'}>
-        <header className={'App-header'}>
-          <h1 className={'App-title'}>
-            TradingView Charting Library and React Integration Example
-          </h1>
-        </header>
-        <TVChartContainer />
-      </div>
-    );
-  }
+import Chart from './components/Chart';
+
+export default function App() {
+  return (
+    <div className="App">
+      <Chart />
+    </div>
+  );
 }
-
-export default App;
